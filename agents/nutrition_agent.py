@@ -122,6 +122,26 @@ Rules:
 
     response = llm_call(SYSTEM_PROMPT, prompt, json_mode=False)
     data = parse_json_response(response)
+    from data.knowledge_base.nutrition_db import verify_meal_macros
+
+    # Verify and correct meal macros
+    for day_data in data.get("daily_plans", []):
+        day_total_cal = 0
+        day_total_pro = 0
+        for meal in day_data.get("meals", []):
+            verified = verify_meal_macros(meal.get("foods", []))
+            # Only use verified values if they're reasonable
+            # (at least 80% of LLM estimate — prevents partial matching errors)
+            if verified and verified["calories"] >= meal.get("calories", 0) * 0.5:
+                meal["calories"]  = verified["calories"]
+                meal["protein_g"] = verified["protein_g"]
+                meal["carbs_g"]   = verified["carbs_g"]
+                meal["fats_g"]    = verified["fats_g"]
+            day_total_cal += meal.get("calories", 0)
+            day_total_pro += meal.get("protein_g", 0)
+        # Recalculate day totals from verified meals
+        day_data["total_calories"]  = round(day_total_cal, 1)
+        day_data["total_protein_g"] = round(day_total_pro, 1)
 
     daily_plans = []
     for day_data in data.get("daily_plans", []):

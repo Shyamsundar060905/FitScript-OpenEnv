@@ -594,11 +594,15 @@ def _show_prescription(p):
             f"{p.nutrition_plan.target_protein_g:.0f}g protein/day"
         )
         for day in p.nutrition_plan.daily_plans:
+            actual_cal  = sum(m.calories  for m in day.meals)
+            actual_pro  = sum(m.protein_g for m in day.meals)
+            actual_carb = sum(m.carbs_g   for m in day.meals)
+            actual_fat  = sum(m.fats_g    for m in day.meals)
             with st.expander(
-                f"**{day.day_name}** · {day.total_calories:.0f} kcal · "
-                f"P:{day.total_protein_g:.0f}g "
-                f"C:{day.total_carbs_g:.0f}g "
-                f"F:{day.total_fats_g:.0f}g"
+                f"**{day.day_name}** · {actual_cal:.0f} kcal · "
+                f"P:{actual_pro:.0f}g "
+                f"C:{actual_carb:.0f}g "
+                f"F:{actual_fat:.0f}g"
             ):
                 for meal in day.meals:
                     st.markdown(
