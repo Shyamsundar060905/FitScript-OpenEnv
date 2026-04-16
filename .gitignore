@@ -1,0 +1,8 @@
+.env
+data/users/auth.json
+data/episodic.db
+data/chroma/
+__pycache__/
+*.pyc
+venv/
+.streamlit/secrets.toml
