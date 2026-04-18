@@ -21,6 +21,16 @@ import json
 import math
 import sys
 import os
+
+# Force UTF-8 on Windows so Unicode characters (──, ✓, etc.) don't crash
+# when output is redirected to a file via `>`.
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass  # Older Python versions
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -86,13 +96,30 @@ DEFAULT_QRELS = [
 
 
 def load_qrels() -> list[dict]:
+    """
+    Load the labeled query set. Falls back to DEFAULT_QRELS if the file
+    is missing, empty, or malformed — and repairs it on disk so subsequent
+    runs are clean.
+    """
     if QRELS_PATH.exists():
-        return json.loads(QRELS_PATH.read_text())
+        text = QRELS_PATH.read_text(encoding="utf-8").strip()
+        if text:
+            try:
+                data = json.loads(text)
+                if isinstance(data, list) and data:
+                    return data
+            except json.JSONDecodeError:
+                print(f"  [qrels] {QRELS_PATH.name} is malformed — rewriting with defaults")
+
+    # File missing, empty, or bad — write defaults and return them
+    save_qrels(DEFAULT_QRELS)
+    print(f"  [qrels] Wrote {len(DEFAULT_QRELS)} default queries to {QRELS_PATH.name}")
     return DEFAULT_QRELS
 
 
 def save_qrels(qrels: list[dict]):
-    QRELS_PATH.write_text(json.dumps(qrels, indent=2))
+    QRELS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    QRELS_PATH.write_text(json.dumps(qrels, indent=2), encoding="utf-8")
 
 
 @dataclass
@@ -162,6 +189,7 @@ def evaluate_retrieval(
     qrels = qrels or load_qrels()
     per_query = []
     p_sum = r_sum = rr_sum = ndcg_sum = 0.0
+    _id_warning_shown = False
 
     for q in qrels:
         query = q["query"]
@@ -177,15 +205,26 @@ def evaluate_retrieval(
         else:
             chunks = retriever(query, k, q.get("goal"), q.get("constraints"))
 
-        # Each chunk should have an 'id' key, fall back to first word of content
+        # Each chunk should have an 'id' key
         retrieved_ids = []
         for c in chunks:
             if isinstance(c, dict):
-                rid = c.get("id") or c.get("doc_id") or _extract_id_hint(c.get("content", ""))
+                rid = c.get("id") or c.get("doc_id")
             else:
                 rid = str(c)
             if rid:
                 retrieved_ids.append(rid)
+
+        # Diagnostic: if the retriever returned chunks but none had ids,
+        # the evaluator can't score anything. Warn once with actionable info.
+        if chunks and not retrieved_ids and not _id_warning_shown:
+            sample_keys = (list(chunks[0].keys())
+                           if isinstance(chunks[0], dict) else "not a dict")
+            print(f"\n  ⚠  WARNING: retriever returned {len(chunks)} chunks but none had 'id' fields.")
+            print(f"     Evaluator cannot match retrieved chunks to relevant_ids.")
+            print(f"     Check that memory/semantic.py includes 'id' in each returned dict.")
+            print(f"     Sample chunk keys: {sample_keys}\n")
+            _id_warning_shown = True
 
         p = _precision_at_k(retrieved_ids, relevant_ids, k)
         r = _recall_at_k(retrieved_ids, relevant_ids, k)

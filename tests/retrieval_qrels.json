@@ -1,0 +1,90 @@
+[
+  {
+    "query": "how much protein for muscle gain",
+    "goal": "muscle_gain",
+    "relevant_ids": [
+      "nut_001",
+      "nut_002",
+      "nut_003"
+    ]
+  },
+  {
+    "query": "vegetarian sources of complete protein",
+    "goal": "muscle_gain",
+    "relevant_ids": [
+      "nut_002",
+      "nut_013",
+      "nut_016"
+    ]
+  },
+  {
+    "query": "training with knee pain",
+    "constraints": [
+      "knee pain"
+    ],
+    "relevant_ids": [
+      "ex_017"
+    ]
+  },
+  {
+    "query": "progressive overload for dumbbell training",
+    "relevant_ids": [
+      "ex_001",
+      "ex_002",
+      "adapt_005",
+      "ex_014"
+    ]
+  },
+  {
+    "query": "training volume sets per week for hypertrophy",
+    "goal": "muscle_gain",
+    "relevant_ids": [
+      "ex_003",
+      "ex_004"
+    ]
+  },
+  {
+    "query": "weight loss caloric deficit",
+    "goal": "weight_loss",
+    "relevant_ids": [
+      "nut_005",
+      "adapt_001",
+      "nut_017"
+    ]
+  },
+  {
+    "query": "indian food high protein vegetarian",
+    "relevant_ids": [
+      "nut_013",
+      "nut_014",
+      "nut_015",
+      "nut_016"
+    ]
+  },
+  {
+    "query": "plateau detection weight loss",
+    "goal": "weight_loss",
+    "relevant_ids": [
+      "ex_010",
+      "adapt_001"
+    ]
+  },
+  {
+    "query": "how many rest days per week beginner",
+    "goal": "muscle_gain",
+    "relevant_ids": [
+      "ex_006",
+      "ex_007",
+      "ex_012"
+    ]
+  },
+  {
+    "query": "shoulder pain modifications",
+    "constraints": [
+      "shoulder pain"
+    ],
+    "relevant_ids": [
+      "ex_019"
+    ]
+  }
+]
