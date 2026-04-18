@@ -1,0 +1,19 @@
+{
+  "user_id": "user_user1",
+  "name": "Keshav",
+  "age": 21,
+  "weight_kg": 68.1,
+  "height_cm": 174.0,
+  "goal": "endurance",
+  "fitness_level": "intermediate",
+  "dietary_restrictions": [],
+  "available_equipment": [
+    "bodyweight",
+    "dumbbells",
+    "resistance_bands"
+  ],
+  "sessions_per_week": 4,
+  "tdee_estimate": 2497.0,
+  "created_at": "2026-04-19T01:48:31.914925",
+  "updated_at": "2026-04-19T01:49:28.885055"
+}
