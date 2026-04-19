@@ -32,6 +32,7 @@ Return a JSON object with EXACTLY these fields:
   "user_id": "user_<3 random digits>",
   "name": "extract or use 'User'",
   "age": <integer>,
+  "sex": "male" or "female",
   "weight_kg": <float>,
   "height_cm": <float>,
   "goal": "<one of: weight_loss, muscle_gain, endurance, maintenance>",
@@ -42,11 +43,15 @@ Return a JSON object with EXACTLY these fields:
   "tdee_estimate": <a single computed number like 2690.0, NOT a formula>
 }}
 
-For TDEE estimation use: 
-  weight_loss -> TDEE = weight_kg * 22 * activity_factor - 300
-  muscle_gain -> TDEE = weight_kg * 22 * activity_factor + 300
-  maintenance/endurance -> TDEE = weight_kg * 22 * activity_factor
-  activity_factor: beginner=1.4, intermediate=1.6, advanced=1.8
+For TDEE estimation use Mifflin-St Jeor + activity factor:
+  BMR = 10*weight_kg + 6.25*height_cm - 5*age + sex_offset
+    where sex_offset = +5 for male, -161 for female
+  activity_factor: sedentary=1.2, light=1.375, moderate=1.55, very_active=1.725
+  
+  weight_loss    -> TDEE = BMR * activity_factor - 400
+  muscle_gain    -> TDEE = BMR * activity_factor + 300
+  endurance      -> TDEE = BMR * activity_factor + 100
+  maintenance    -> TDEE = BMR * activity_factor
 
 Return ONLY the JSON object, nothing else."""
 

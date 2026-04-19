@@ -112,6 +112,7 @@ class AuthResponse(BaseModel):
 class ProfileCreate(BaseModel):
     name: str
     age: int
+    sex: str = "male"     
     weight_kg: float
     height_cm: float
     goal: str
@@ -124,6 +125,7 @@ class ProfileCreate(BaseModel):
 class ProfileUpdate(BaseModel):
     weight_kg: Optional[float] = None
     age: Optional[int] = None
+    sex: Optional[str] = None     
     sessions_per_week: Optional[int] = None
     goal: Optional[str] = None
     fitness_level: Optional[str] = None

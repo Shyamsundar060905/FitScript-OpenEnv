@@ -14,32 +14,50 @@ class UserProfile(BaseModel):
     user_id: str
     name: str
     age: int
+    sex: Literal["male", "female"] = "male"   # NEW — required for Mifflin-St Jeor BMR
     weight_kg: float
     height_cm: float
     goal: Literal["weight_loss", "muscle_gain", "endurance", "maintenance"]
     fitness_level: Literal["beginner", "intermediate", "advanced"]
-    dietary_restrictions: List[str] = []           # e.g. ["vegetarian", "gluten_free"]
-    available_equipment: List[str] = ["bodyweight"] # e.g. ["dumbbells", "barbell"]
+    dietary_restrictions: List[str] = []
+    available_equipment: List[str] = ["bodyweight"]
     sessions_per_week: int = 3
-    tdee_estimate: float = 2000.0                  # total daily energy expenditure
+    tdee_estimate: float = 2000.0
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def bmi(self) -> float:
         return round(self.weight_kg / ((self.height_cm / 100) ** 2), 1)
 
+    def bmr(self) -> float:
+        """
+        Mifflin-St Jeor BMR (kcal/day).
+        Reference: Mifflin MD, St Jeor ST, et al. A new predictive equation
+        for resting energy expenditure in healthy individuals.
+        Am J Clin Nutr. 1990;51(2):241-247.
+        """
+        sex_offset = 5 if self.sex == "male" else -161
+        return (10 * self.weight_kg) + (6.25 * self.height_cm) - (5 * self.age) + sex_offset
+
+    def tdee(self, activity_factor: float = 1.55) -> float:
+        """
+        Total Daily Energy Expenditure.
+        Activity factor defaults to 'moderately active' (1.55).
+        """
+        return self.bmr() * activity_factor
+
     def to_summary(self) -> str:
         """Plain text summary for LLM prompts."""
         return (
-            f"Name: {self.name}, Age: {self.age}, Weight: {self.weight_kg}kg, "
-            f"Height: {self.height_cm}cm, BMI: {self.bmi()}, "
+            f"Name: {self.name}, Age: {self.age}, Sex: {self.sex}, "
+            f"Weight: {self.weight_kg}kg, Height: {self.height_cm}cm, "
+            f"BMI: {self.bmi()}, BMR: {self.bmr():.0f} kcal/day, "
             f"Goal: {self.goal}, Fitness level: {self.fitness_level}, "
             f"Equipment: {', '.join(self.available_equipment)}, "
             f"Dietary restrictions: {', '.join(self.dietary_restrictions) or 'none'}, "
             f"Sessions/week: {self.sessions_per_week}, "
             f"Estimated TDEE: {self.tdee_estimate} kcal/day"
         )
-
 
 # ── Progress tracking ─────────────────────────────────────────────────────────
 

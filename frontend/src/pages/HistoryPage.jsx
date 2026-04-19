@@ -1,30 +1,32 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import Container from '../components/Container'
+import PageHeader from '../components/PageHeader'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts'
 import { format, parseISO } from 'date-fns'
 
 const CustomTooltip = ({ active, payload, label, unit }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="card px-3 py-2 text-xs shadow-lift">
-      <p className="text-ink-400">{label}</p>
-      <p className="font-semibold text-ink-800">{payload[0].value}{unit}</p>
+    <div className="bg-ink-800 text-paper-50 px-3 py-1.5 rounded-md text-[11px] tnum">
+      <span className="text-paper-300">{label}</span>
+      <span className="ml-2 font-semibold">{payload[0].value}{unit}</span>
     </div>
   )
 }
 
 export default function HistoryPage() {
-  const [days,      setDays]      = useState(30)
-  const [logs,      setLogs]      = useState([])
-  const [weights,   setWeights]   = useState([])
+  const [days, setDays]           = useState(30)
+  const [logs, setLogs]           = useState([])
+  const [weights, setWeights]     = useState([])
   const [exercises, setExercises] = useState([])
-  const [selEx,     setSelEx]     = useState('')
+  const [selEx, setSelEx]         = useState('')
   const [exHistory, setExHistory] = useState([])
 
   useEffect(() => {
     api.getLogs(days).then(setLogs).catch(() => {})
     api.getWeights(days).then(setWeights).catch(() => {})
-    api.getExercises(60).then(ex => { setExercises(ex); if (ex.length) setSelEx(ex[0]) }).catch(() => {})
+    api.getExercises(60).then(ex => { setExercises(ex); if (ex.length && !selEx) setSelEx(ex[0]) }).catch(() => {})
   }, [days])
 
   useEffect(() => {
@@ -38,82 +40,97 @@ export default function HistoryPage() {
   }))
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink-900">Progress History</h1>
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-ink-400 font-medium">Show last</label>
-          <select
-            value={days}
-            onChange={e => setDays(Number(e.target.value))}
-            className="input w-auto text-xs"
-          >
-            {[7,14,30,60,90].map(d => <option key={d} value={d}>{d} days</option>)}
-          </select>
-        </div>
-      </div>
+    <Container size="lg">
+      <PageHeader
+        eyebrow="Progress"
+        title="History"
+        description="Everything your agents analyze — body measurements, adherence, and exercise progression."
+        actions={
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-ink-400">Range</span>
+            <select value={days} onChange={e => setDays(Number(e.target.value))}
+                    className="input w-auto text-[12px] py-1.5 tnum">
+              {[7,14,30,60,90].map(d => <option key={d} value={d}>{d} days</option>)}
+            </select>
+          </div>
+        }
+      />
 
-      {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-4 mb-6">
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-ink-700 mb-4">Weight Trend</h2>
+      {/* Charts row */}
+      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+        <div className="card p-6">
+          <p className="eyebrow mb-1">Body weight</p>
+          <h2 className="section-title mb-5">Daily measurements</h2>
           {weightChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={weightChart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8E3D5" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis domain={['auto','auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={34} />
-                <Tooltip content={<CustomTooltip unit=" kg" />} />
-                <Line type="monotone" dataKey="kg" stroke="#7CB342" strokeWidth={2.5}
-                  dot={{ r: 3, fill: '#7CB342', strokeWidth: 0 }}
-                  activeDot={{ r: 5 }} />
-              </LineChart>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={weightChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stopColor="#6B9737" stopOpacity={0.22} />
+                    <stop offset="100%" stopColor="#6B9737" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="2 4" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#857E6C' }} axisLine={false} tickLine={false} />
+                <YAxis domain={['dataMin - 1', 'dataMax + 1']}
+                       tick={{ fontSize: 10, fill: '#857E6C' }} axisLine={false} tickLine={false} width={32} />
+                <Tooltip content={<CustomTooltip unit=" kg" />} cursor={{ stroke: '#D8D3C4', strokeDasharray: '2 4' }} />
+                <Area type="monotone" dataKey="kg" stroke="#6B9737" strokeWidth={2} fill="url(#wGrad)"
+                      dot={{ r: 2.5, fill: '#6B9737', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: '#6B9737', stroke: '#FAF7EE', strokeWidth: 2 }} />
+              </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-sm text-ink-400">No weight data yet</div>
+            <div className="h-[220px] flex items-center justify-center text-[12.5px] text-ink-400">No weight data yet</div>
           )}
         </div>
 
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-ink-700 mb-4">Daily Calories</h2>
+        <div className="card p-6">
+          <p className="eyebrow mb-1">Nutrition</p>
+          <h2 className="section-title mb-5">Daily calories</h2>
           {calChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={calChart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8E3D5" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={42} />
-                <Tooltip content={<CustomTooltip unit=" kcal" />} />
-                <Bar dataKey="kcal" fill="#7CB342" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={calChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="2 4" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#857E6C' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#857E6C' }} axisLine={false} tickLine={false} width={40} />
+                <Tooltip content={<CustomTooltip unit=" kcal" />} cursor={{ fill: 'rgba(28, 26, 20, 0.04)' }} />
+                <Bar dataKey="kcal" fill="#B94A1E" radius={[3, 3, 0, 0]} maxBarSize={24} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-sm text-ink-400">No calorie data yet</div>
+            <div className="h-[220px] flex items-center justify-center text-[12.5px] text-ink-400">No calorie data yet</div>
           )}
         </div>
       </div>
 
       {/* Full log table */}
       {logs.length > 0 && (
-        <div className="card p-5 mb-6">
-          <h2 className="text-sm font-semibold text-ink-700 mb-4">Full Log</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        <div className="card p-6 mb-5">
+          <p className="eyebrow mb-1">Log</p>
+          <h2 className="section-title mb-5">Full entries</h2>
+          <div className="overflow-x-auto -mx-6 px-6">
+            <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-cream-400 text-left">
+                <tr className="hair-b">
                   {['Date','Workout','Difficulty','Weight','Calories','Notes'].map(h => (
-                    <th key={h} className="pb-2 pr-4 text-xs font-semibold text-ink-400 uppercase tracking-wider">{h}</th>
+                    <th key={h} className="pb-2.5 pr-4 eyebrow text-left">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {[...logs].reverse().map((l, i) => (
-                  <tr key={i} className="border-b border-cream-100 last:border-0">
-                    <td className="py-2.5 pr-4 text-ink-600 whitespace-nowrap">{format(parseISO(l.date), 'MMM d, yyyy')}</td>
-                    <td className="py-2.5 pr-4">{l.workout_completed ? '✅' : '—'}</td>
-                    <td className="py-2.5 pr-4 text-ink-500">{l.workout_rating ? `${l.workout_rating}/5` : '—'}</td>
-                    <td className="py-2.5 pr-4 text-ink-600">{l.weight_kg ? `${l.weight_kg} kg` : '—'}</td>
-                    <td className="py-2.5 pr-4 text-ink-600">{l.calories_eaten ? `${Math.round(l.calories_eaten)}` : '—'}</td>
-                    <td className="py-2.5 text-ink-400 text-xs max-w-[160px] truncate">{l.notes || '—'}</td>
+                  <tr key={i} className="hair-b last:border-0">
+                    <td className="py-3 pr-4 text-ink-700 whitespace-nowrap tnum">{format(parseISO(l.date), 'MMM d, yyyy')}</td>
+                    <td className="py-3 pr-4">
+                      {l.workout_completed
+                        ? <span className="chip-sage">Done</span>
+                        : <span className="text-ink-300">—</span>}
+                    </td>
+                    <td className="py-3 pr-4 text-ink-600 tnum">{l.workout_rating ? `${l.workout_rating}/5` : '—'}</td>
+                    <td className="py-3 pr-4 text-ink-800 tnum">{l.weight_kg ? `${l.weight_kg} kg` : '—'}</td>
+                    <td className="py-3 pr-4 text-ink-800 tnum">{l.calories_eaten ? `${Math.round(l.calories_eaten)}` : '—'}</td>
+                    <td className="py-3 text-ink-500 text-[12.5px] max-w-[180px] truncate">{l.notes || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -124,49 +141,54 @@ export default function HistoryPage() {
 
       {/* Exercise history */}
       {exercises.length > 0 && (
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-ink-700 mb-4">Exercise Progression</h2>
-          <div className="mb-4">
-            <label className="label">Select exercise</label>
-            <select value={selEx} onChange={e => setSelEx(e.target.value)} className="input w-auto">
+        <div className="card p-6">
+          <div className="flex items-start justify-between mb-5 gap-4 flex-wrap">
+            <div>
+              <p className="eyebrow mb-1">Progressive overload</p>
+              <h2 className="section-title">Exercise progression</h2>
+            </div>
+            <select value={selEx} onChange={e => setSelEx(e.target.value)}
+                    className="input w-auto text-[13px] py-1.5">
               {exercises.map(ex => <option key={ex} value={ex}>{ex}</option>)}
             </select>
           </div>
           {exHistory.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-cream-400 text-left">
+                  <tr className="hair-b">
                     {['Date','Performance','Notes'].map(h => (
-                      <th key={h} className="pb-2 pr-4 text-xs font-semibold text-ink-400 uppercase tracking-wider">{h}</th>
+                      <th key={h} className="pb-2.5 pr-4 eyebrow text-left">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {exHistory.map((r, i) => (
-                    <tr key={i} className="border-b border-cream-100 last:border-0">
-                      <td className="py-2.5 pr-4 text-ink-600 whitespace-nowrap">{format(parseISO(r.date), 'MMM d')}</td>
-                      <td className="py-2.5 pr-4 font-mono text-xs text-ink-700">
-                        {r.sets_completed}×{r.reps_completed}
+                    <tr key={i} className="hair-b last:border-0">
+                      <td className="py-3 pr-4 text-ink-700 whitespace-nowrap tnum">{format(parseISO(r.date), 'MMM d')}</td>
+                      <td className="py-3 pr-4 font-mono text-[12px] text-ink-800 tnum">
+                        {r.sets_completed} × {r.reps_completed}
                         {r.weight_kg > 0 ? ` @ ${r.weight_kg}kg` : ' (BW)'}
                       </td>
-                      <td className="py-2.5 text-ink-400 text-xs">{r.notes || '—'}</td>
+                      <td className="py-3 text-ink-500 text-[12.5px]">{r.notes || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="text-sm text-ink-400">No history for {selEx} yet.</p>
+            <p className="text-[13px] text-ink-400">No history for {selEx} yet.</p>
           )}
         </div>
       )}
 
       {logs.length === 0 && (
         <div className="card p-10 text-center">
-          <p className="text-ink-400 text-sm">No history yet. Log your first check-in to start tracking!</p>
+          <p className="text-[13.5px] text-ink-400">
+            No history yet. Log your first check-in to start tracking.
+          </p>
         </div>
       )}
-    </div>
+    </Container>
   )
 }

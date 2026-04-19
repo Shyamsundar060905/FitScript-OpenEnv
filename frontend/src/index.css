@@ -4,103 +4,270 @@
 
 @layer base {
   :root {
-    --cream-bg: #FAF8F1;
-    --sidebar-bg: #F5F2E8;
-    --border: #E8E3D5;
-    --sage: #7CB342;
-    --sage-dark: #689F38;
-    --ink: #1F2937;
-    --muted: #6B7280;
+    --paper:     #FAF7EE;
+    --paper-2:   #F4F0E2;
+    --paper-3:   #EBE5D2;
+    --hair:      rgba(28, 26, 20, 0.08);
+    --hair-2:    rgba(28, 26, 20, 0.14);
+    --sage:      #6B9737;
+    --sage-dark: #557A2C;
+    --clay:      #B94A1E;
+    --clay-dark: #963A17;
+    --ink:       #1C1A14;
+    --ink-muted: #5E5749;
+    --ink-soft:  #857E6C;
   }
 
   * { box-sizing: border-box; }
 
-  body {
-    background-color: var(--cream-bg);
-    color: var(--ink);
-    font-family: 'DM Sans', system-ui, sans-serif;
+  html {
+    font-feature-settings: 'ss01', 'cv11', 'kern';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(1200px 800px at 12% 8%, rgba(107, 151, 55, 0.04), transparent 60%),
+      radial-gradient(900px 700px at 90% 96%, rgba(185, 74, 30, 0.035), transparent 55%);
+    color: var(--ink);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'kern';
+  }
+
+  /* Sharper focus rings */
+  :focus-visible {
+    outline: 2px solid var(--sage);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D9D2C0; border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: #C5BBB0; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(28, 26, 20, 0.12);
+    border-radius: 10px;
+    border: 2px solid var(--paper);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(28, 26, 20, 0.22); }
+
+  ::selection { background: rgba(107, 151, 55, 0.28); color: var(--ink); }
+
+  /* Numeric tabular — for tables, stats, agent logs */
+  .tnum { font-variant-numeric: tabular-nums; }
 }
 
 @layer components {
+  /* ──────────────── Surfaces ──────────────── */
   .card {
-    @apply bg-white rounded-2xl border border-cream-400 shadow-card;
+    @apply bg-white rounded-2xl shadow-card relative;
+  }
+  .card-raised {
+    @apply bg-white rounded-2xl shadow-lift;
+  }
+  .card-paper {
+    @apply bg-paper-100 rounded-2xl shadow-hair;
   }
 
+  /* Thin divider hairline */
+  .hair { border-color: var(--hair); }
+  .hair-b { border-bottom: 1px solid var(--hair); }
+  .hair-t { border-top: 1px solid var(--hair); }
+  .hair-r { border-right: 1px solid var(--hair); }
+
+  /* ──────────────── Typographic helpers ──────────────── */
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase text-ink-400 tnum;
+    letter-spacing: 0.14em;
+  }
+  .smallcaps {
+    @apply text-xs font-semibold uppercase text-ink-500;
+    letter-spacing: 0.08em;
+  }
+  .serif-num { font-family: 'Syne', sans-serif; font-feature-settings: 'tnum'; }
+
+  /* Section headers used throughout */
+  .section-title {
+    @apply font-display text-[15px] font-semibold text-ink-800 tracking-tight;
+  }
+
+  /* ──────────────── Buttons ──────────────── */
   .btn-primary {
-    @apply bg-sage-500 hover:bg-sage-600 text-white font-medium px-4 py-2.5 rounded-xl
-           transition-all duration-150 hover:-translate-y-px hover:shadow-lift
-           active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed
-           disabled:hover:translate-y-0 disabled:hover:shadow-none;
+    @apply bg-ink-800 hover:bg-ink-900 text-paper-50 font-medium px-4 py-2.5 rounded-lg
+           text-sm transition-all duration-150 shadow-card
+           hover:shadow-lift active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed
+           inline-flex items-center justify-center gap-2;
   }
-
+  .btn-accent {
+    @apply bg-sage-500 hover:bg-sage-600 text-white font-medium px-4 py-2.5 rounded-lg
+           text-sm transition-all duration-150 shadow-card
+           hover:shadow-lift active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed
+           inline-flex items-center justify-center gap-2;
+  }
+  .btn-clay {
+    @apply bg-clay-500 hover:bg-clay-600 text-white font-medium px-4 py-2.5 rounded-lg
+           text-sm transition-all duration-150 shadow-card
+           hover:shadow-lift active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed
+           inline-flex items-center justify-center gap-2;
+  }
   .btn-secondary {
-    @apply bg-white hover:bg-cream-100 text-ink-800 font-medium px-4 py-2.5 rounded-xl
-           border border-cream-400 transition-all duration-150 hover:-translate-y-px
-           hover:shadow-card active:translate-y-0;
+    @apply bg-white hover:bg-paper-100 text-ink-800 font-medium px-4 py-2.5 rounded-lg
+           text-sm transition-all duration-150 shadow-card hover:shadow-lift
+           active:translate-y-px inline-flex items-center justify-center gap-2;
   }
-
   .btn-ghost {
-    @apply text-ink-600 hover:text-ink-900 hover:bg-cream-200 font-medium px-3 py-2
-           rounded-xl transition-all duration-150;
+    @apply text-ink-600 hover:text-ink-900 hover:bg-paper-200 font-medium px-3 py-2
+           rounded-lg text-sm transition-all duration-150 inline-flex items-center gap-2;
+  }
+  .btn-danger {
+    @apply bg-white hover:bg-clay-50 text-clay-500 hover:text-clay-600 font-medium px-4 py-2.5
+           rounded-lg text-sm border border-clay-100 hover:border-clay-200 transition-all duration-150
+           inline-flex items-center justify-center gap-2;
   }
 
+  /* ──────────────── Inputs ──────────────── */
   .input {
-    @apply w-full bg-white border border-cream-400 rounded-xl px-3.5 py-2.5
-           text-ink-800 placeholder-ink-400 text-sm
-           focus:outline-none focus:ring-2 focus:ring-sage-500/30 focus:border-sage-500
+    @apply w-full bg-white rounded-lg px-3.5 py-2.5 text-sm text-ink-800 placeholder-ink-300
            transition-all duration-150;
+    box-shadow: inset 0 0 0 1px var(--hair);
+  }
+  .input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 1.5px var(--sage), 0 0 0 3px rgba(107, 151, 55, 0.12);
+  }
+  .input:hover:not(:focus) {
+    box-shadow: inset 0 0 0 1px var(--hair-2);
   }
 
   .label {
-    @apply block text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1.5;
+    @apply block text-[10px] font-semibold text-ink-500 uppercase tnum mb-1.5;
+    letter-spacing: 0.14em;
   }
 
-  .badge-high   { @apply bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full text-xs font-semibold; }
-  .badge-medium { @apply bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs font-semibold; }
-  .badge-low    { @apply bg-sage-500/10 text-sage-700 border border-sage-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold; }
-
-  .metric-card {
-    @apply card p-4 flex flex-col items-center justify-center text-center gap-1;
+  /* ──────────────── Chips & badges ──────────────── */
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium tnum;
+    letter-spacing: 0.02em;
   }
+  .chip-sage  { @apply chip bg-sage-50 text-sage-700; box-shadow: inset 0 0 0 0.5px rgba(107, 151, 55, 0.3); }
+  .chip-clay  { @apply chip bg-clay-50 text-clay-600; box-shadow: inset 0 0 0 0.5px rgba(216, 100, 58, 0.3); }
+  .chip-ink   { @apply chip bg-ink-50 text-ink-700; box-shadow: inset 0 0 0 0.5px rgba(28, 26, 20, 0.1); }
+  .chip-paper { @apply chip bg-paper-200 text-ink-600; }
 
+  .badge-high   { @apply chip bg-clay-50 text-clay-600;
+                  box-shadow: inset 0 0 0 0.5px rgba(216, 100, 58, 0.35); }
+  .badge-medium { @apply chip bg-amber-50 text-amber-700;
+                  box-shadow: inset 0 0 0 0.5px rgba(180, 120, 30, 0.25); }
+  .badge-low    { @apply chip bg-sage-50 text-sage-700;
+                  box-shadow: inset 0 0 0 0.5px rgba(107, 151, 55, 0.3); }
+
+  /* ──────────────── Toggle pills ──────────────── */
+  .toggle {
+    @apply px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150
+           inline-flex items-center gap-1.5 cursor-pointer;
+  }
+  .toggle-off {
+    @apply bg-white text-ink-600 hover:text-ink-900;
+    box-shadow: inset 0 0 0 1px var(--hair);
+  }
+  .toggle-off:hover { box-shadow: inset 0 0 0 1px var(--hair-2); }
+  .toggle-on {
+    @apply bg-ink-800 text-paper-50 shadow-card;
+  }
+  .toggle-on-sage { @apply bg-sage-500 text-white shadow-card; }
+  .toggle-on-clay { @apply bg-clay-50 text-clay-600;
+                    box-shadow: inset 0 0 0 1px rgba(216, 100, 58, 0.5); }
+
+  /* ──────────────── Nav items ──────────────── */
   .nav-item {
-    @apply flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium
-           transition-all duration-150 cursor-pointer;
-  }
-  .nav-item-active {
-    @apply bg-sage-500 text-white shadow-card;
+    @apply flex items-center gap-3 w-full px-3 py-2 rounded-lg text-[13px] font-medium
+           transition-all duration-150 cursor-pointer relative;
   }
   .nav-item-inactive {
-    @apply text-ink-600 hover:bg-cream-300 hover:text-ink-900;
+    @apply text-ink-500 hover:text-ink-900 hover:bg-paper-200;
+  }
+  .nav-item-active {
+    @apply text-ink-900 bg-paper-200;
+  }
+  .nav-item-active::before {
+    content: '';
+    @apply absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-sage-500 rounded-full;
   }
 
-  /* Agent step pills */
-  .agent-step { @apply px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3; }
-  .agent-done { @apply bg-sage-500/10 text-sage-700 border-l-2 border-sage-500; }
-  .agent-running { @apply bg-white text-ink-700 border-l-2 border-ink-400 animate-pulse-soft; }
-  .agent-pending { @apply bg-cream-100 text-ink-400 border-l-2 border-cream-400; }
-  .agent-error { @apply bg-red-50 text-red-700 border-l-2 border-red-400; }
+  /* ──────────────── Agent pipeline steps ──────────────── */
+  .agent-step {
+    @apply relative flex items-start gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-300;
+  }
+  .agent-done {
+    @apply bg-sage-50 text-sage-700;
+    box-shadow: inset 0 0 0 0.5px rgba(107, 151, 55, 0.25);
+  }
+  .agent-running {
+    @apply bg-white text-ink-800 animate-pulse-soft;
+    box-shadow: inset 0 0 0 0.5px var(--clay), 0 0 0 3px rgba(185, 74, 30, 0.1);
+  }
+  .agent-pending {
+    @apply bg-paper-100 text-ink-400;
+    box-shadow: inset 0 0 0 0.5px var(--hair);
+  }
+  .agent-error {
+    @apply bg-clay-50 text-clay-600;
+    box-shadow: inset 0 0 0 0.5px rgba(216, 100, 58, 0.35);
+  }
 
-  /* Page transitions */
-  .page-enter {
-    animation: slideUp 0.3s ease forwards;
+  /* ──────────────── Metric card ──────────────── */
+  .metric {
+    @apply bg-white rounded-xl p-4 shadow-card relative overflow-hidden;
+  }
+  .metric-label {
+    @apply text-[10px] font-semibold text-ink-400 uppercase tnum;
+    letter-spacing: 0.14em;
+  }
+  .metric-value {
+    @apply font-display text-[28px] font-bold text-ink-900 leading-none tracking-tight;
+    font-feature-settings: 'tnum';
+  }
+
+  /* ──────────────── Decorative ornament ──────────────── */
+  /* A thin horizontal rule with a centered diamond — used between editorial sections */
+  .ornament {
+    @apply flex items-center gap-3 text-ink-300 my-6;
+  }
+  .ornament::before,
+  .ornament::after {
+    content: '';
+    @apply flex-1 h-px bg-ink-200;
+  }
+  .ornament-dot {
+    @apply w-1 h-1 bg-clay-500 rounded-full;
+  }
+
+  /* Page transition */
+  .page-enter { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+  /* Link style */
+  .link {
+    @apply text-ink-800 underline decoration-ink-300 underline-offset-2
+           hover:decoration-sage-500 hover:text-sage-700 transition-colors;
   }
 }
 
-/* Recharts overrides */
+/* Recharts polish */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #E8E3D5;
+  stroke: rgba(28, 26, 20, 0.07);
 }
 .recharts-tooltip-wrapper {
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.08));
+  filter: drop-shadow(0 8px 20px rgba(28, 26, 20, 0.08));
 }
+.recharts-surface { overflow: visible; }
+
+/* Date input chevron on paper background */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 0.8; }

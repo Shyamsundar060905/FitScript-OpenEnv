@@ -3,26 +3,42 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
   LayoutDashboard, Dumbbell, ClipboardCheck, LineChart,
-  Camera, Settings, LogOut, Menu, X, Zap, ChevronRight
+  Images, Settings, LogOut, Menu, X
 } from 'lucide-react'
 import clsx from 'clsx'
 
 const NAV = [
-  { path: '/',         label: 'Dashboard',       icon: LayoutDashboard },
-  { path: '/plan',     label: 'My Plan',          icon: Dumbbell        },
-  { path: '/checkin',  label: 'Check-in',         icon: ClipboardCheck  },
-  { path: '/history',  label: 'History',          icon: LineChart       },
-  { path: '/photos',   label: 'Progress Photos',  icon: Camera          },
-  { path: '/settings', label: 'Settings',         icon: Settings        },
+  { path: '/',         label: 'Overview',   icon: LayoutDashboard, section: 'main' },
+  { path: '/plan',     label: 'Plan',       icon: Dumbbell,        section: 'main' },
+  { path: '/checkin',  label: 'Check-in',   icon: ClipboardCheck,  section: 'main' },
+  { path: '/history',  label: 'History',    icon: LineChart,       section: 'main' },
+  { path: '/photos',   label: 'Photos',     icon: Images,          section: 'main' },
+  { path: '/settings', label: 'Settings',   icon: Settings,        section: 'secondary' },
 ]
 
-function Logo() {
+export function Mark({ size = 28 }) {
+  // Custom mark — layered F / forward arrow, sage+clay, scales cleanly
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="38" height="38" rx="9" fill="#1C1A14" />
+      <path d="M12 11H28V15H16V19H26V23H16V29H12V11Z" fill="#FAF7EE" />
+      <circle cx="30.5" cy="28.5" r="2.5" fill="#B94A1E" />
+    </svg>
+  )
+}
+
+export function Wordmark({ size = 28 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-xl bg-sage-500 flex items-center justify-center shadow-card">
-        <Zap size={16} className="text-white" strokeWidth={2.5} />
+      <Mark size={size} />
+      <div className="flex flex-col leading-none">
+        <span className="font-display font-bold text-ink-900 text-[17px] tracking-tight">
+          FitAgent
+        </span>
+        <span className="text-[9px] font-mono uppercase text-ink-400 tnum mt-0.5" style={{ letterSpacing: '0.18em' }}>
+          Evidence · Agents · You
+        </span>
       </div>
-      <span className="font-display font-bold text-ink-900 text-lg tracking-tight">FitAgent</span>
     </div>
   )
 }
@@ -34,9 +50,8 @@ function NavItem({ item, active, onClick }) {
       onClick={onClick}
       className={clsx('nav-item', active ? 'nav-item-active' : 'nav-item-inactive')}
     >
-      <Icon size={17} strokeWidth={active ? 2.5 : 2} />
+      <Icon size={15} strokeWidth={active ? 2.25 : 1.75} />
       <span>{item.label}</span>
-      {active && <ChevronRight size={14} className="ml-auto opacity-60" />}
     </button>
   )
 }
@@ -61,73 +76,98 @@ export default function AppShell({ children }) {
     navigate('/login')
   }
 
+  const mainNav      = NAV.filter(n => n.section === 'main')
+  const secondaryNav = NAV.filter(n => n.section === 'secondary')
+
   const sidebar = (
-    <aside className="flex flex-col h-full bg-cream-200 border-r border-cream-400 w-64 flex-shrink-0">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4 border-b border-cream-400">
-        <Logo />
-        {/* User pill */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sage-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-            {initials}
+    <aside className="flex flex-col h-full bg-paper-100 hair-r w-64 flex-shrink-0">
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5 hair-b">
+        <Wordmark />
+      </div>
+
+      {/* User pill */}
+      <div className="px-4 py-4 hair-b">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-9 h-9 rounded-lg bg-ink-800 text-paper-50 flex items-center justify-center text-[11px] font-display font-bold shadow-card">
+              {initials}
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-sage-500 border-2 border-paper-100" />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-ink-800 truncate">{profile?.name ?? user?.username}</p>
-            <p className="text-xs text-ink-400 capitalize truncate">{goal} · {profile?.fitness_level}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold text-ink-800 truncate">
+              {profile?.name ?? user?.username}
+            </p>
+            <p className="text-[11px] text-ink-400 capitalize truncate">
+              {goal || 'onboarding'} · {profile?.fitness_level ?? '—'}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
-        {NAV.map(item => (
-          <NavItem
-            key={item.path}
-            item={item}
-            active={pathname === item.path}
-            onClick={() => handleNav(item.path)}
-          />
-        ))}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="eyebrow px-3 mb-2">Workspace</p>
+        <div className="flex flex-col gap-0.5">
+          {mainNav.map(item => (
+            <NavItem
+              key={item.path}
+              item={item}
+              active={pathname === item.path}
+              onClick={() => handleNav(item.path)}
+            />
+          ))}
+        </div>
+
+        <p className="eyebrow px-3 mb-2 mt-6">Account</p>
+        <div className="flex flex-col gap-0.5">
+          {secondaryNav.map(item => (
+            <NavItem
+              key={item.path}
+              item={item}
+              active={pathname === item.path}
+              onClick={() => handleNav(item.path)}
+            />
+          ))}
+        </div>
       </nav>
 
       {/* Footer */}
-      <div className="px-3 pb-5 border-t border-cream-400 pt-3">
-        <button
-          onClick={handleLogout}
-          className="nav-item nav-item-inactive w-full text-red-500 hover:bg-red-50 hover:text-red-600"
-        >
-          <LogOut size={17} strokeWidth={2} />
-          <span>Log out</span>
+      <div className="px-3 py-3 hair-t">
+        <button onClick={handleLogout} className="nav-item nav-item-inactive w-full">
+          <LogOut size={15} strokeWidth={1.75} />
+          <span>Sign out</span>
         </button>
       </div>
     </aside>
   )
 
   return (
-    <div className="min-h-screen flex bg-cream-100">
+    <div className="min-h-screen flex">
       {/* Desktop sidebar */}
       <div className="hidden md:flex">{sidebar}</div>
 
       {/* Mobile overlay */}
       {open && (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-ink-900/30 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="relative flex">{sidebar}</div>
         </div>
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-cream-200 border-b border-cream-400">
-          <Logo />
+        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-paper-100 hair-b">
+          <Wordmark size={24} />
           <button onClick={() => setOpen(!open)} className="btn-ghost p-2">
-            {open ? <X size={20} /> : <Menu size={20} />}
+            {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 page-enter">
+        <main className="flex-1 overflow-y-auto page-enter">
           {children}
         </main>
       </div>

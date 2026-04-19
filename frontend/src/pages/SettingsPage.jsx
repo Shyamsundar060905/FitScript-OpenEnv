@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../lib/api'
-import { Save, CheckCircle2, FlaskConical, Trash2, AlertTriangle } from 'lucide-react'
+import Container from '../components/Container'
+import PageHeader from '../components/PageHeader'
+import {
+  Save, CheckCircle2, FlaskConical, Trash2, BarChart2, User, Target,
+  Package, Wrench, ChevronDown
+} from 'lucide-react'
 import clsx from 'clsx'
 
 const GOALS = ['muscle_gain', 'weight_loss', 'endurance', 'maintenance']
@@ -14,22 +19,30 @@ const EQUIPMENT = [
 
 function Toggle({ active, onClick, children }) {
   return (
-    <button
-      type="button" onClick={onClick}
-      className={clsx(
-        'px-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-150',
-        active
-          ? 'bg-sage-500 text-white border-sage-500 shadow-card'
-          : 'bg-white text-ink-600 border-cream-400 hover:border-sage-500 hover:text-sage-600'
-      )}
-    >
+    <button type="button" onClick={onClick}
+      className={clsx('toggle', active ? 'toggle-on' : 'toggle-off')}>
       {children}
     </button>
   )
 }
 
+function SectionCard({ title, icon: Icon, description, children }) {
+  return (
+    <section className="card p-6">
+      <div className="flex items-start gap-3 mb-5">
+        <Icon size={15} className="text-ink-400 mt-0.5" strokeWidth={1.75} />
+        <div>
+          <h2 className="font-display text-[16px] font-semibold text-ink-900 tracking-tight">{title}</h2>
+          {description && <p className="text-[12px] text-ink-500 mt-0.5">{description}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 export default function SettingsPage() {
-  const { profile, setProfile, refreshProfile } = useAuth()
+  const { profile, setProfile } = useAuth()
 
   const [form, setForm] = useState({
     weight_kg:            profile?.weight_kg ?? 70,
@@ -41,20 +54,17 @@ export default function SettingsPage() {
     available_equipment:  profile?.available_equipment ?? ['bodyweight'],
   })
 
-  const [saved,    setSaved]    = useState(false)
-  const [saving,   setSaving]   = useState(false)
-  const [seeding,  setSeeding]  = useState(false)
-  const [clearing, setClearing] = useState(false)
-  const [usage,    setUsage]    = useState(null)
+  const [saved,     setSaved]     = useState(false)
+  const [saving,    setSaving]    = useState(false)
+  const [seeding,   setSeeding]   = useState(false)
+  const [clearing,  setClearing]  = useState(false)
+  const [usage,     setUsage]     = useState(null)
   const [showUsage, setShowUsage] = useState(false)
 
   function num(k) { return e => setForm(f => ({ ...f, [k]: Number(e.target.value) })) }
 
   function toggleList(k, v) {
-    setForm(f => ({
-      ...f,
-      [k]: f[k].includes(v) ? f[k].filter(x => x !== v) : [...f[k], v],
-    }))
+    setForm(f => ({ ...f, [k]: f[k].includes(v) ? f[k].filter(x => x !== v) : [...f[k], v] }))
   }
 
   async function handleSave() {
@@ -67,14 +77,13 @@ export default function SettingsPage() {
       setProfile(updated)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    } catch (ex) {
-      alert(ex.detail ?? 'Failed to save')
-    } finally { setSaving(false) }
+    } catch (ex) { alert(ex.detail ?? 'Failed to save') }
+    finally { setSaving(false) }
   }
 
   async function handleSeed() {
     setSeeding(true)
-    try { await api.seedData(3); alert('✓ 3 weeks of test data seeded!') }
+    try { await api.seedData(3); alert('✓ 3 weeks of test data seeded') }
     catch { alert('Failed to seed data') }
     finally { setSeeding(false) }
   }
@@ -94,46 +103,46 @@ export default function SettingsPage() {
     setShowUsage(true)
   }
 
+  const bmi = profile ? (profile.weight_kg / ((profile.height_cm / 100) ** 2)).toFixed(1) : '—'
+
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink-900">Settings</h1>
-        <p className="text-sm text-ink-400 mt-1">Update your profile and preferences.</p>
-      </div>
+    <Container size="md">
+      <PageHeader
+        eyebrow="Account"
+        title="Settings"
+        description="Update your profile, preferences, and review system usage."
+      />
 
       {saved && (
-        <div className="flex items-center gap-2 bg-sage-500/10 border border-sage-500/20 text-sage-700 rounded-xl px-4 py-3 mb-5">
-          <CheckCircle2 size={16} />
-          <span className="text-sm font-medium">Profile updated!</span>
+        <div className="flex items-center gap-2 bg-sage-50 text-sage-700 rounded-lg px-4 py-3 mb-5"
+             style={{ boxShadow: 'inset 0 0 0 0.5px rgba(107, 151, 55, 0.3)' }}>
+          <CheckCircle2 size={15} strokeWidth={2} />
+          <span className="text-[13px] font-medium">Profile updated</span>
         </div>
       )}
 
       <div className="flex flex-col gap-5">
-        {/* Basic info */}
-        <div className="card p-6">
-          <h2 className="font-display font-bold text-ink-800 mb-4">Basic Info</h2>
+        <SectionCard title="Basic info" icon={User}>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="label">Weight (kg)</label>
-              <input type="number" step={0.5} className="input" value={form.weight_kg} onChange={num('weight_kg')} />
+              <label className="label">Weight · kg</label>
+              <input type="number" step={0.5} className="input tnum" value={form.weight_kg} onChange={num('weight_kg')} />
             </div>
             <div>
               <label className="label">Age</label>
-              <input type="number" min={16} max={80} className="input" value={form.age} onChange={num('age')} />
+              <input type="number" min={16} max={80} className="input tnum" value={form.age} onChange={num('age')} />
             </div>
             <div>
-              <label className="label">Sessions / week</label>
-              <input type="number" min={2} max={7} className="input" value={form.sessions_per_week} onChange={num('sessions_per_week')} />
+              <label className="label">Sessions/wk</label>
+              <input type="number" min={2} max={7} className="input tnum" value={form.sessions_per_week} onChange={num('sessions_per_week')} />
             </div>
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Goal */}
-        <div className="card p-6">
-          <h2 className="font-display font-bold text-ink-800 mb-4">Goal & Level</h2>
-          <div className="mb-4">
-            <label className="label">Primary Goal</label>
-            <div className="flex gap-2 flex-wrap">
+        <SectionCard title="Goal & level" icon={Target}>
+          <div className="mb-5">
+            <label className="label">Primary goal</label>
+            <div className="flex flex-wrap gap-2">
               {GOALS.map(g => (
                 <Toggle key={g} active={form.goal === g} onClick={() => setForm(f => ({ ...f, goal: g }))}>
                   {g.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
@@ -142,7 +151,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div>
-            <label className="label">Fitness Level</label>
+            <label className="label">Fitness level</label>
             <div className="flex gap-2">
               {LEVELS.map(l => (
                 <Toggle key={l} active={form.fitness_level === l} onClick={() => setForm(f => ({ ...f, fitness_level: l }))}>
@@ -151,85 +160,95 @@ export default function SettingsPage() {
               ))}
             </div>
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Equipment & Diet */}
-        <div className="card p-6">
-          <h2 className="font-display font-bold text-ink-800 mb-4">Equipment & Diet</h2>
-          <div className="mb-4">
-            <label className="label">Available Equipment</label>
+        <SectionCard title="Equipment & diet" icon={Package}>
+          <div className="mb-5">
+            <label className="label">Available equipment</label>
             <div className="flex flex-wrap gap-2">
               {EQUIPMENT.map(e => (
                 <Toggle key={e} active={form.available_equipment.includes(e)} onClick={() => toggleList('available_equipment', e)}>
-                  {e.replace('_', ' ')}
+                  {e.replace(/_/g, ' ')}
                 </Toggle>
               ))}
             </div>
           </div>
           <div>
-            <label className="label">Dietary Restrictions</label>
+            <label className="label">Dietary restrictions</label>
             <div className="flex flex-wrap gap-2">
               {DIETS.map(d => (
                 <Toggle key={d} active={form.dietary_restrictions.includes(d)} onClick={() => toggleList('dietary_restrictions', d)}>
-                  {d.replace('_', ' ')}
+                  {d.replace(/_/g, ' ')}
                 </Toggle>
               ))}
             </div>
           </div>
-        </div>
+        </SectionCard>
 
-        <button onClick={handleSave} disabled={saving} className="btn-primary w-full py-3 flex items-center justify-center gap-2">
-          <Save size={16} />
-          {saving ? 'Saving…' : 'Save Changes'}
+        <button onClick={handleSave} disabled={saving} className="btn-primary w-full py-3.5 text-[14px]">
+          <Save size={14} />
+          {saving ? 'Saving…' : 'Save changes'}
         </button>
 
-        {/* Developer tools */}
-        <div className="card p-6">
-          <h2 className="font-display font-bold text-ink-800 mb-1">Developer Tools</h2>
-          <p className="text-xs text-ink-400 mb-4">For testing and diagnostics only.</p>
+        {/* Computed info */}
+        <div className="card p-6 bg-paper-100">
+          <p className="eyebrow mb-3">Computed</p>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-[12.5px]">
+            <div className="flex justify-between"><dt className="text-ink-500">Name</dt><dd className="font-medium text-ink-800">{profile?.name}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-500">Height</dt><dd className="font-medium text-ink-800 tnum">{profile?.height_cm} cm</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-500">BMI</dt><dd className="font-medium text-ink-800 tnum">{bmi}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-500">TDEE target</dt><dd className="font-medium text-ink-800 tnum">{profile?.tdee_estimate?.toFixed(0)} kcal/day</dd></div>
+          </dl>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <button onClick={handleSeed} disabled={seeding} className="btn-secondary flex items-center justify-center gap-2 text-sm">
-              <FlaskConical size={15} />
-              {seeding ? 'Seeding…' : 'Seed 3 Weeks Data'}
+        {/* Developer tools */}
+        <SectionCard title="Developer tools" icon={Wrench}
+                     description="For testing the multi-agent pipeline. Not part of the regular user flow.">
+          <div className="grid sm:grid-cols-2 gap-3 mb-4">
+            <button onClick={handleSeed} disabled={seeding} className="btn-secondary text-[13px]">
+              <FlaskConical size={14} />
+              {seeding ? 'Seeding…' : 'Seed 3 weeks of data'}
             </button>
-            <button onClick={handleClear} disabled={clearing} className="btn-secondary flex items-center justify-center gap-2 text-sm text-red-500 hover:bg-red-50 hover:border-red-200">
-              <Trash2 size={15} />
-              {clearing ? 'Clearing…' : 'Clear All My Data'}
+            <button onClick={handleClear} disabled={clearing} className="btn-danger text-[13px]">
+              <Trash2 size={14} />
+              {clearing ? 'Clearing…' : 'Clear all my data'}
             </button>
           </div>
 
-          <button onClick={handleUsage} className="btn-ghost text-xs flex items-center gap-1.5">
-            📊 {showUsage ? 'Hide' : 'Show'} Usage & Diagnostics
+          <button onClick={handleUsage} className="btn-ghost text-[12.5px]">
+            <BarChart2 size={13} />
+            {showUsage ? 'Hide' : 'Show'} usage & diagnostics
+            <ChevronDown size={13} className={clsx('transition-transform', showUsage && 'rotate-180')} />
           </button>
 
           {showUsage && usage && (
-            <div className="mt-3 bg-cream-100 rounded-xl p-4 text-xs font-mono text-ink-600 space-y-1">
-              <p>Plans today: {usage.rate_limit?.used_today} / {usage.rate_limit?.daily_limit}</p>
-              <p>Last hour: {usage.rate_limit?.used_this_hour}</p>
+            <div className="mt-3 bg-ink-800 text-paper-100 rounded-lg p-4 text-[11.5px] font-mono tnum">
+              <div className="flex justify-between hair-b pb-2 mb-2" style={{ borderColor: 'rgba(250, 247, 238, 0.1)' }}>
+                <span className="text-paper-300">Plans today</span>
+                <span>{usage.rate_limit?.used_today} / {usage.rate_limit?.daily_limit}</span>
+              </div>
+              <div className="flex justify-between pb-2">
+                <span className="text-paper-300">Last hour</span>
+                <span>{usage.rate_limit?.used_this_hour}</span>
+              </div>
               {usage.runs?.successful_runs > 0 && (
                 <>
-                  <p className="mt-2">Total agent runs: {usage.runs.successful_runs}</p>
+                  <div className="hair-t pt-2 mt-2 flex justify-between" style={{ borderColor: 'rgba(250, 247, 238, 0.1)' }}>
+                    <span className="text-paper-300">Agent runs (total)</span>
+                    <span>{usage.runs.successful_runs}</span>
+                  </div>
                   {Object.entries(usage.runs.by_agent ?? {}).map(([agent, s]) => (
-                    <p key={agent}>  • {agent}: {s.count} runs, avg {s.avg_ms}ms</p>
+                    <div key={agent} className="flex justify-between pl-2 mt-1">
+                      <span className="text-paper-300">→ {agent}</span>
+                      <span>{s.count} runs · {s.avg_ms}ms avg</span>
+                    </div>
                   ))}
                 </>
               )}
             </div>
           )}
-        </div>
-
-        {/* Account info */}
-        <div className="card p-6">
-          <h2 className="font-display font-bold text-ink-800 mb-3">Profile Info</h2>
-          <div className="text-sm text-ink-500 space-y-1 font-mono">
-            <p>Name: {profile?.name}</p>
-            <p>BMI: {profile ? (profile.weight_kg / ((profile.height_cm / 100) ** 2)).toFixed(1) : '—'}</p>
-            <p>TDEE estimate: {profile?.tdee_estimate?.toFixed(0)} kcal/day</p>
-            <p>Height: {profile?.height_cm} cm</p>
-          </div>
-        </div>
+        </SectionCard>
       </div>
-    </div>
+    </Container>
   )
 }
