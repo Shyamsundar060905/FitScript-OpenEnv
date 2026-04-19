@@ -13,6 +13,7 @@ import CheckinPage   from './pages/CheckinPage'
 import HistoryPage   from './pages/HistoryPage'
 import PhotosPage    from './pages/PhotosPage'
 import SettingsPage  from './pages/SettingsPage'
+import LearnPage     from './pages/LearnPage'
 import AppShell      from './components/AppShell'
 
 function LoadingScreen() {
@@ -62,6 +63,7 @@ function Router() {
         <Route path="/checkin"  element={<CheckinPage />} />
         <Route path="/history"  element={<HistoryPage />} />
         <Route path="/photos"   element={<PhotosPage />} />
+        <Route path="/learn"    element={<LearnPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/login"    element={<Navigate to="/" replace />} />
         <Route path="/onboard"  element={<Navigate to="/" replace />} />

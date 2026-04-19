@@ -144,7 +144,7 @@ export default function OnboardPage() {
 
     const tdee_map = {
       weight_loss: tdee_preview - 400,
-      muscle_gain: tdee_preview + 300,
+      muscle_gain: tdee_preview + 250,
       endurance:   tdee_preview + 100,
       maintenance: tdee_preview,
     }

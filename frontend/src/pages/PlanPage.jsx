@@ -3,6 +3,10 @@ import { useAuth } from '../hooks/useAuth'
 import { api } from '../lib/api'
 import Container from '../components/Container'
 import NutritionLiteracy from '../components/NutritionLiteracy'
+import PlateVisualization from '../components/PlateVisualization'
+import Tooltip, { TooltipMeta, TooltipBody } from '../components/Tooltip'
+import { getExerciseReasoning } from '../lib/exerciseReasoning'
+import { getFoodReasoning } from '../lib/foodReasoning'
 import {
   ChevronDown, ChevronUp, BookOpen, AlertTriangle, Download, Calendar,
   User, BarChart3, Dumbbell, Apple, GitMerge, Brain, Check, X, Loader2, Sparkles
@@ -112,19 +116,37 @@ function ExerciseDay({ day, index }) {
       </button>
       {open && (
         <div className="px-4 py-3 bg-white hair-t flex flex-col gap-2.5">
-          {day.exercises.map((ex, i) => (
-            <div key={i} className="flex items-start justify-between gap-4 text-[13px]">
-              <div className="min-w-0">
-                <span className="font-medium text-ink-800">{ex.name}</span>
-                {ex.notes && <p className="text-[11.5px] text-ink-400 mt-0.5 leading-relaxed">↳ {ex.notes}</p>}
+          {day.exercises.map((ex, i) => {
+            const reasoning = getExerciseReasoning(ex.name)
+            return (
+              <div key={i} className="flex items-start justify-between gap-4 text-[13px]">
+                <div className="min-w-0">
+                  <span className="font-medium text-ink-800 inline-flex items-center gap-1.5">
+                    {ex.name}
+                    {reasoning && (
+                      <Tooltip
+                        label={`Why ${ex.name}?`}
+                        content={
+                          <>
+                            <TooltipMeta label="Primary" value={reasoning.primary} />
+                            <TooltipMeta label="Pattern" value={reasoning.pattern} />
+                            <TooltipMeta label="Level"   value={reasoning.level} />
+                            <TooltipBody>{reasoning.why}</TooltipBody>
+                          </>
+                        }
+                      />
+                    )}
+                  </span>
+                  {ex.notes && <p className="text-[11.5px] text-ink-400 mt-0.5 leading-relaxed">↳ {ex.notes}</p>}
+                </div>
+                <span className="font-mono text-[11.5px] text-ink-600 tnum whitespace-nowrap flex-shrink-0">
+                  {ex.duration_minutes
+                    ? `${ex.duration_minutes}m`
+                    : `${ex.sets} × ${String(ex.reps).replace('-', '–')} · ${ex.rest_seconds}s`}
+                </span>
               </div>
-              <span className="font-mono text-[11.5px] text-ink-600 tnum whitespace-nowrap flex-shrink-0">
-                {ex.duration_minutes
-                  ? `${ex.duration_minutes}m`
-                  : `${ex.sets} × ${String(ex.reps).replace('-', '–')} · ${ex.rest_seconds}s`}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -167,9 +189,27 @@ function NutritionDay({ day, index }) {
                 </span>
               </div>
               <ul className="flex flex-col gap-0.5 mt-1">
-                {meal.foods.map((f, j) => (
-                  <li key={j} className="text-[12px] text-ink-500 ml-1">— {f}</li>
-                ))}
+                {meal.foods.map((f, j) => {
+                  const foodReasoning = getFoodReasoning(f)
+                  return (
+                    <li key={j} className="text-[12px] text-ink-500 ml-1 inline-flex items-center gap-1.5">
+                      <span>— {f}</span>
+                      {foodReasoning && (
+                        <Tooltip
+                          label={`Why ${foodReasoning.key}?`}
+                          position="right"
+                          content={
+                            <>
+                              <TooltipMeta label="Category" value={foodReasoning.category} />
+                              <TooltipMeta label="Key nutrients" value={foodReasoning.primary} />
+                              <TooltipBody>{foodReasoning.why}</TooltipBody>
+                            </>
+                          }
+                        />
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           ))}
@@ -356,6 +396,9 @@ export default function PlanPage() {
 
           {/* Nutrition literacy — explains WHY specific foods were chosen */}
           <NutritionLiteracy rx={rx} profile={profile} />
+
+          {/* Plate visualization — macro composition vs targets */}
+          <PlateVisualization rx={rx} profile={profile} />
 
           {/* Adaptation signals */}
           {rx.adaptation_signals?.length > 0 && (

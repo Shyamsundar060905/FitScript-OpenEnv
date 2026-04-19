@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
   LayoutDashboard, Dumbbell, ClipboardCheck, LineChart,
-  Images, Settings, LogOut, Menu, X
+  Images, BookOpen, Settings, LogOut, Menu, X
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -13,6 +13,7 @@ const NAV = [
   { path: '/checkin',  label: 'Check-in',   icon: ClipboardCheck,  section: 'main' },
   { path: '/history',  label: 'History',    icon: LineChart,       section: 'main' },
   { path: '/photos',   label: 'Photos',     icon: Images,          section: 'main' },
+  { path: '/learn',    label: 'Learn',      icon: BookOpen,        section: 'secondary' },
   { path: '/settings', label: 'Settings',   icon: Settings,        section: 'secondary' },
 ]
 
