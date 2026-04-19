@@ -119,10 +119,12 @@ export default function PlanPage() {
   const [constraints, setConstraints] = useState([])
 
   useEffect(() => {
-    // Load latest plan and constraints
-    api.getLatestPlan().then(p => { if (p) setRx(p) }).catch(() => {})
-    api.getConstraints().then(d => setConstraints(d.constraints)).catch(() => {})
-  }, [])
+      // Fire a silent health check first to wake a sleeping Render free-tier backend.
+      // Then load the latest plan + constraints in parallel.
+      api.health().catch(() => {})
+      api.getLatestPlan().then(p => { if (p) setRx(p) }).catch(() => {})
+      api.getConstraints().then(d => setConstraints(d.constraints)).catch(() => {})
+    }, [])
 
   function setStep(key, st, detail = '') {
     setStatus(prev => ({ ...prev, [key]: { st, detail } }))
@@ -194,6 +196,12 @@ export default function PlanPage() {
           {running ? 'Running agents…' : 'Run All Agents'}
         </button>
       </div>
+
+      {running && (
+        <p className="text-xs text-ink-400 mt-2 italic">
+          First run after inactivity may take 20–30 seconds while the backend wakes up.
+        </p>
+      )}
 
       {error && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3 mb-5">

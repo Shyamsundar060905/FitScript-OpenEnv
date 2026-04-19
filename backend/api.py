@@ -14,7 +14,7 @@ from datetime import datetime
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from fastapi import FastAPI, HTTPException, Depends, Header, Query
+from fastapi import FastAPI, HTTPException, Depends, Header, Query, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -43,14 +43,22 @@ from config import USERS_DIR
 # ── App setup ────────────────────────────────────────────────────────────────
 app = FastAPI(title="FitAgent API", version="2.0")
 
+# CORS — allow configured origins only. In dev defaults to localhost; in prod
+# set ALLOWED_ORIGINS env var on Render to your Vercel URL.
+_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = (
+    [o.strip() for o in _origins_env.split(",") if o.strip()]
+    if _origins_env
+    else ["http://localhost:5173", "http://127.0.0.1:5173"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten via ALLOWED_ORIGINS env var in prod if desired
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 @app.on_event("startup")
 def startup():
     init_db()
@@ -350,7 +358,85 @@ def save_checkin(body: CheckinRequest, user: dict = Depends(require_user)):
 
     return {"ok": True}
 
+# ── Progress photos ───────────────────────────────────────────────────────────
 
+@app.get("/photos")
+def photos_list(user: dict = Depends(require_user)):
+    """Return the user's photo metadata, most recent first."""
+    return list_photos(user["user_id"], limit=50)
+
+
+@app.post("/photos")
+async def photos_upload(
+    file: UploadFile = File(...),
+    date: Optional[str] = Form(None),
+    weight_kg: Optional[float] = Form(None),
+    note: str = Form(""),
+    user: dict = Depends(require_user),
+):
+    """
+    Upload a progress photo.
+
+    Expects multipart/form-data with:
+      - file:      the image (.jpg/.jpeg/.png/.webp/.heic, max 10MB)
+      - date:      ISO date string (optional, defaults to today)
+      - weight_kg: weight on this day (optional)
+      - note:      freeform caption (optional)
+    """
+    try:
+        file_bytes = await file.read()
+        result = save_photo(
+            user_id=user["user_id"],
+            file_bytes=file_bytes,
+            original_filename=file.filename or "upload.jpg",
+            date=date,
+            weight_kg=weight_kg,
+            note=note,
+        )
+        return result
+    except PhotoUploadError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/photos/{photo_id}")
+def photos_delete(photo_id: int, user: dict = Depends(require_user)):
+    """Delete a photo (both the file and the DB row)."""
+    removed = remove_photo(user["user_id"], photo_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return {"ok": True}
+
+
+@app.get("/photos/{photo_id}/file")
+def photos_file(
+    photo_id: int,
+    user: dict = Depends(require_user_download),
+):
+    """
+    Serve the raw photo bytes.
+    Uses require_user_download so <img> tags can auth via ?token=<jwt>.
+    Only returns photos owned by the authenticated user — prevents
+    one user from viewing another user's photos via ID guessing.
+    """
+    # Find this photo in the user's gallery and confirm ownership
+    photos = list_photos(user["user_id"], limit=500)
+    match = next((p for p in photos if p.get("id") == photo_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    photo_path = Path(match["photo_path"])
+    if not photo_path.exists():
+        raise HTTPException(status_code=404, detail="Photo file missing on disk")
+
+    # Infer content type from extension
+    ext = photo_path.suffix.lower()
+    mime = {
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".png": "image/png", ".webp": "image/webp",
+        ".heic": "image/heic",
+    }.get(ext, "application/octet-stream")
+
+    return FileResponse(str(photo_path), media_type=mime)
 # ── History ───────────────────────────────────────────────────────────────────
 
 @app.get("/history/logs")
