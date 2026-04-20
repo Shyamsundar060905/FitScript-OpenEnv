@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../lib/api'
 import Container from '../components/Container'
@@ -11,7 +11,7 @@ import clsx from 'clsx'
 
 const GOALS = ['muscle_gain', 'weight_loss', 'endurance', 'maintenance']
 const LEVELS = ['beginner', 'intermediate', 'advanced']
-const DIETS  = ['vegetarian', 'vegan', 'gluten_free', 'dairy_free', 'halal']
+const DIETS = ['vegetarian', 'eggetarian', 'non_vegetarian', 'vegan', 'gluten_free', 'dairy_free']
 const EQUIPMENT = [
   'bodyweight', 'dumbbells', 'barbell', 'pull_up_bar',
   'resistance_bands', 'kettlebell', 'gym_machines', 'bench',
@@ -60,6 +60,19 @@ export default function SettingsPage() {
   const [clearing,  setClearing]  = useState(false)
   const [usage,     setUsage]     = useState(null)
   const [showUsage, setShowUsage] = useState(false)
+  const [allergies, setAllergies] = useState('')
+
+  // Fetch existing constraints to pre-fill the allergy box
+  useEffect(() => {
+    api.getConstraints().then(d => {
+      const allergyConstraint = d.constraints.find(c => c.startsWith('SEVERE FOOD ALLERGY:'))
+      if (allergyConstraint) {
+        // Extract just the food names from the constraint string
+        const match = allergyConstraint.match(/SEVERE FOOD ALLERGY: (.*) — STRICTLY/)
+        if (match) setAllergies(match[1])
+      }
+    }).catch(() => {})
+  }, [])
 
   function num(k) { return e => setForm(f => ({ ...f, [k]: Number(e.target.value) })) }
 
@@ -70,17 +83,34 @@ export default function SettingsPage() {
   async function handleSave() {
     setSaving(true)
     try {
+      // 1. Save standard profile data
       const updated = await api.updateProfile({
         ...form,
         available_equipment: form.available_equipment.length ? form.available_equipment : ['bodyweight'],
       })
       setProfile(updated)
+
+      // 2. Handle the Allergy Constraint
+      const existing = await api.getConstraints()
+      // Keep everything EXCEPT the old allergy
+      const filteredConstraints = existing.constraints.filter(c => !c.startsWith('SEVERE FOOD ALLERGY:'))
+      
+      // If they typed a new allergy, add it to the list
+      if (allergies.trim()) {
+        filteredConstraints.push(`SEVERE FOOD ALLERGY: ${allergies.trim()} — STRICTLY AVOID IN ALL MEALS`)
+      }
+      // Save constraints
+      await api.updateConstraints(filteredConstraints)
+
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    } catch (ex) { alert(ex.detail ?? 'Failed to save') }
-    finally { setSaving(false) }
+    } catch (ex) { 
+      alert(ex.detail ?? 'Failed to save') 
+    } finally { 
+      setSaving(true) 
+      setSaving(false) // Reset saving state
+    }
   }
-
   async function handleSeed() {
     setSeeding(true)
     try { await api.seedData(3); alert('✓ 3 weeks of test data seeded') }
@@ -182,6 +212,18 @@ export default function SettingsPage() {
                 </Toggle>
               ))}
             </div>
+          </div>
+          <div className="pt-4 hair-t">
+            <label className="label">Food Allergies</label>
+            <input 
+              className="input" 
+              placeholder="e.g. peanuts, shellfish, soy" 
+              value={allergies} 
+              onChange={e => setAllergies(e.target.value)} 
+            />
+            <p className="text-[11px] text-ink-400 mt-1.5 italic">
+              Any foods listed here will be strictly excluded by the Nutrition Agent.
+            </p>
           </div>
         </SectionCard>
 

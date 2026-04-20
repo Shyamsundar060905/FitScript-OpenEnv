@@ -1,10 +1,10 @@
 {
-  "user_id": "user_coffeine",
-  "name": "Keshav Agrawal",
+  "user_id": "user_coffeine16",
+  "name": "Keshav",
   "age": 21,
   "sex": "male",
-  "weight_kg": 67.9,
-  "height_cm": 175.0,
+  "weight_kg": 67.5,
+  "height_cm": 174.0,
   "goal": "muscle_gain",
   "fitness_level": "intermediate",
   "dietary_restrictions": [
@@ -14,7 +14,7 @@
     "bodyweight"
   ],
   "sessions_per_week": 4,
-  "tdee_estimate": 2676.0,
-  "created_at": "2026-04-17T02:44:17.372406",
-  "updated_at": "2026-04-20T22:33:59.711252"
+  "tdee_estimate": 2827.0,
+  "created_at": "2026-04-20T16:46:23.285578",
+  "updated_at": "2026-04-20T22:28:16.092079"
 }

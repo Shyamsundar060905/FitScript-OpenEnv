@@ -26,8 +26,8 @@ from data.knowledge_base.nutrition_db import verify_meal_macros
 
 
 SYSTEM_PROMPT = """You are the Nutrition Agent in a multi-agent AI system.
-You are a registered dietitian specialized in Indian vegetarian and sports
-nutrition following ICMR-NIN dietary guidelines. Respond with valid JSON only.
+You are a registered dietitian specialized in Indian and sports nutrition 
+following ICMR-NIN dietary guidelines. Respond with valid JSON only.
 All numeric values must be plain numbers.
 """
 
@@ -126,11 +126,9 @@ Rules:
 - Provide exactly 3 days: Monday, Tuesday, Wednesday
 - Include 4 meals per day: Breakfast, Lunch, Snack, Dinner
 - Use specific quantities: "100g paneer" or "1 cup milk" not just "paneer"
-- Use these food names when possible: rajma, chana, chole, moong dal,
-  masoor dal, toor dal, paneer, curd, milk, soya chunks, tofu,
-  brown rice, white rice, oats, roti, spinach, banana, peanut butter,
-  almonds, eggs, hung curd — they map to verified macros.
+- Use these food names when possible: rajma, chana, chole, moong dal, masoor dal, toor dal, paneer, curd, milk, soya chunks, tofu, brown rice, white rice, oats, roti, spinach, banana, peanut butter, almonds, eggs, chicken breast, fish, hung curd — they map to verified macros.
 - Strictly respect dietary restrictions: {restrictions}
+- CRITICAL CONSTRAINTS & ALLERGIES: {adaptation_context} (YOU MUST ABSOLUTELY EXCLUDE ANY ALLERGENS MENTIONED HERE).
 - Align all food choices with goal: {profile.goal}
 """
 

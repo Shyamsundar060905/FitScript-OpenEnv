@@ -21,7 +21,7 @@ const ACTIVITY_LEVELS = [
   { value: 'moderate',      label: 'Moderately active',  sub: 'On feet most of day' },
   { value: 'very_active',   label: 'Very active',        sub: 'Physical labour / sport' },
 ]
-const DIETS  = ['vegetarian', 'vegan', 'gluten_free', 'dairy_free', 'halal']
+const DIETS = ['vegetarian', 'eggetarian', 'non_vegetarian', 'vegan', 'gluten_free', 'dairy_free']
 const EQUIPMENT = [
   'bodyweight', 'dumbbells', 'barbell', 'pull_up_bar',
   'resistance_bands', 'kettlebell', 'gym_machines', 'bench',
@@ -114,6 +114,7 @@ export default function OnboardPage() {
     dietary_restrictions: [], available_equipment: ['bodyweight'],
     injuries: [],
     health_conditions: [],
+    allergies: '',
   })
 
   function num(k) { return e => setForm(f => ({ ...f, [k]: Number(e.target.value) })) }
@@ -164,6 +165,9 @@ export default function OnboardPage() {
 
       // Merge everything into the constraints list — zero backend changes
       const combined = [...form.injuries, ...form.health_conditions]
+      if (form.allergies.trim()) {
+          combined.push(`SEVERE FOOD ALLERGY: ${form.allergies.trim()} — STRICTLY AVOID IN ALL MEALS`)
+        }
       if (form.sleep_hours < 6) {
         combined.push(`low sleep (${form.sleep_hours}h) — prioritize recovery, reduce training volume 15%`)
       }
@@ -403,6 +407,15 @@ export default function OnboardPage() {
                 ))}
               </div>
             </div>
+            <div>
+                <label className="label mt-4">Food Allergies <span className="normal-case tracking-normal text-ink-400 font-normal ml-1">— optional</span></label>
+                <input 
+                  className="input" 
+                  placeholder="e.g. peanuts, shellfish, soy" 
+                  value={form.allergies} 
+                  onChange={txt('allergies')} 
+                />
+              </div>
           </SectionCard>
 
           {/* 06 — injuries */}

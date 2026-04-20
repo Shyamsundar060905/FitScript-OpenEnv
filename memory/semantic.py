@@ -152,7 +152,7 @@ def retrieve_for_agent(agent_type: str, profile_summary: str,
 
     queries = {
         "fitness": f"workout programming exercise selection {goal or ''} {fitness_level or ''}",
-        "nutrition": f"nutrition meal planning {goal or ''} indian vegetarian protein",
+        "nutrition": f"nutrition meal planning {goal or ''} indian protein",
         "progress": "plateau detection adaptation training progress signals",
         "profile": "user profiling fitness assessment goals",
     }

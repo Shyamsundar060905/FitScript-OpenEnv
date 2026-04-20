@@ -83,7 +83,9 @@ def _apply_variant(variant: str, patches: _Patches):
     if variant == "no_rag":
         def _empty_retrieve(*args, **kwargs):
             return "", []
-        patches.patch(semantic, "retrieve_for_agent", _empty_retrieve)
+        # Fix: Patch the agents directly, not the semantic module
+        patches.patch(fitness_agent, "retrieve_for_agent", _empty_retrieve)
+        patches.patch(nutrition_agent, "retrieve_for_agent", _empty_retrieve)
 
     elif variant == "no_progress":
         # Make progress agent return an empty signal list
@@ -197,10 +199,21 @@ def print_ablation_table(results: dict[str, AblationResult]):
                 row += f" {delta:>+10.2f}"
             print(row)
 
-
 if __name__ == "__main__":
-    print("── Ablation Study Configuration ──\n")
-    print(f"  Variants: {VARIANTS}")
-    print(f"  Dimensions scored: {list(j for j in dir(JudgeScores) if not j.startswith('_'))[:8]}")
-    print("\n  Run with: run_ablation_study(user_id) in a real environment")
-    print("  (requires seeded ChromaDB, running LLM API, a user profile with data)")
+    from llm.router import clear_cache
+    from agents.progress_agent import seed_test_data
+    from memory.episodic import clear_user_data, log_exercise
+
+    test_user_id = "user_001"
+    
+    clear_cache()
+    clear_user_data(test_user_id)
+    seed_test_data(test_user_id, weeks=3)
+    
+    # NEW: Inject fake exercise data so the Overload Engine has something to do!
+    log_exercise(test_user_id, "2026-04-18", "Push-ups", 3, "12,12,12", 0, 3, "8-12")
+    log_exercise(test_user_id, "2026-04-18", "Barbell Squat", 3, "10,10,10", 60, 3, "8-12")
+    
+    print(f"Starting Ablation Study for {test_user_id}...")
+    results = run_ablation_study(test_user_id)
+    print_ablation_table(results)
